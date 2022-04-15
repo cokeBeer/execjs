@@ -86,7 +86,7 @@ func find_runtime_by_name(name string) (RuntimeInterface, error) {
 	}
 }
 
-func Eval(source string) (string, error) {
+func Eval(source string) (interface{}, error) {
 	runtime, err := GetRuntime("")
 	if err != nil {
 		return "", err
@@ -94,7 +94,7 @@ func Eval(source string) (string, error) {
 	return runtime.Eval(source)
 }
 
-func Exec_(source string) (string, error) {
+func Exec_(source string) (interface{}, error) {
 	runtime, err := GetRuntime("")
 	if err != nil {
 		return "", err

@@ -2,6 +2,7 @@ package execjs
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -25,11 +26,11 @@ func BuildExternalRuntime(name string, command []string, runner_source string) *
 	return r
 }
 
-func (r *ExternalRuntime) Exec_(source string) (string, error) {
+func (r *ExternalRuntime) Exec_(source string) (interface{}, error) {
 	return r.Compile("").Exec_(source)
 }
 
-func (r *ExternalRuntime) Eval(source string) (string, error) {
+func (r *ExternalRuntime) Eval(source string) (interface{}, error) {
 	return r.Compile("").Eval(source)
 }
 
@@ -63,7 +64,7 @@ type Context struct {
 	tempfile bool
 }
 
-func (c *Context) Exec_(source string) (string, error) {
+func (c *Context) Exec_(source string) (interface{}, error) {
 	if !c.Is_available() {
 		return "", RuntimeUnavailableError{Message: fmt.Sprintf("runtime is not available on this system")}
 	}
@@ -74,7 +75,7 @@ func (c *Context) Exec_(source string) (string, error) {
 	return output, nil
 }
 
-func (c *Context) Eval(source string) (string, error) {
+func (c *Context) Eval(source string) (interface{}, error) {
 	if !c.Is_available() {
 		return "", RuntimeUnavailableError{Message: fmt.Sprintf("runtime is not available on this system")}
 	}
@@ -85,7 +86,7 @@ func (c *Context) Eval(source string) (string, error) {
 	return output, nil
 }
 
-func (c *Context) Call(name string, args ...string) (string, error) {
+func (c *Context) Call(name string, args ...interface{}) (interface{}, error) {
 	if !c.Is_available() {
 		return "", RuntimeUnavailableError{Message: fmt.Sprintf("runtime is not available on this system")}
 	}
@@ -100,7 +101,7 @@ func (c *Context) Is_available() bool {
 	return c.runtime.Is_available()
 }
 
-func (c *Context) eval(source string) (string, error) {
+func (c *Context) eval(source string) (interface{}, error) {
 	var data string
 	if len(strings.TrimSpace(source)) == 0 {
 		data = "''"
@@ -111,7 +112,7 @@ func (c *Context) eval(source string) (string, error) {
 	return c.Exec_(code)
 }
 
-func (c *Context) exec_(source string) (string, error) {
+func (c *Context) exec_(source string) (interface{}, error) {
 	if c.source != "" {
 		source = c.source + "\n" + source
 	}
@@ -133,9 +134,17 @@ func (c *Context) exec_(source string) (string, error) {
 	return c.extract_result(output)
 }
 
-func (c *Context) call(identifier string, args ...string) (string, error) {
-	arg := strings.Join(args, ",")
-	output, err := c.eval(fmt.Sprintf("%s.apply(this,[%s])", identifier, arg))
+func (c *Context) call(identifier string, args ...interface{}) (interface{}, error) {
+	stringArgs := make([]string, 0)
+	for _, v := range args {
+		arg, err := json.Marshal(v)
+		if err != nil {
+			return "", err
+		}
+		stringArgs = append(stringArgs, string(arg))
+	}
+	argString := strings.Join(stringArgs, ",")
+	output, err := c.eval(fmt.Sprintf("%s.apply(this,[%s])", identifier, argString))
 	if err != nil {
 		return "", err
 	}
@@ -170,13 +179,20 @@ func (c *Context) exec_with_pipe(source string) (string, error) {
 	return outStr, nil
 }
 
-func (c *Context) extract_result(output string) (string, error) {
+func (c *Context) extract_result(output string) (interface{}, error) {
 	ret := strings.Split(output, "\n")
 	data := ret[len(ret)-2]
-	if !strings.HasPrefix(data, `["ok",`) {
-		return "", ProgramError{}
+	var res []interface{}
+	json.Unmarshal([]byte(data), &res)
+	if len(res) == 1 {
+		if res[0].(string) == "ok" {
+			return "", nil
+		} else {
+			return "", ProgramError{}
+		}
+	} else {
+		return res[1], nil
 	}
-	return strings.TrimSuffix(strings.TrimPrefix(data, "[\"ok\","), "]"), nil
 }
 
 func (c *Context) compile(source string) string {

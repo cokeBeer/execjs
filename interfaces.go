@@ -1,19 +1,19 @@
 package execjs
 
 type RuntimeInterface interface {
-	Exec_(string) (string, error)
-	Eval(string) (string, error)
+	Exec_(string) (interface{}, error)
+	Eval(string) (interface{}, error)
 	Compile(string) RuntimeContextInterface
 	Is_available() bool
 	compile(string) RuntimeContextInterface
 }
 
 type RuntimeContextInterface interface {
-	Exec_(string) (string, error)
-	Eval(string) (string, error)
-	Call(string, ...string) (string, error)
+	Exec_(string) (interface{}, error)
+	Eval(string) (interface{}, error)
+	Call(string, ...interface{}) (interface{}, error)
 	Is_available() bool
-	exec_(string) (string, error)
-	eval(string) (string, error)
-	call(string, ...string) (string, error)
+	exec_(string) (interface{}, error)
+	eval(string) (interface{}, error)
+	call(string, ...interface{}) (interface{}, error)
 }

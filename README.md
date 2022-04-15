@@ -6,7 +6,7 @@
   - [Usage](#usage)
   - [Thanks to](#thanks-to)
 ## Introduction
-参考PyExecJS，提供了在go语言里执行js的能力。由于go是强类型语言，所以在迁移的时候使用字符串作为替代传递任意类型的参数。
+参考PyExecJS，提供了在go语言里执行js的能力。由于go是强类型语言，所以在迁移的时候使用`interface{}`作为替代传递任意类型的参数。
 
 ## Requirement
 需要本地path里面配置了node。
@@ -32,12 +32,17 @@ c, err := execjs.Compile(`function add(x, y) {
 if err != nil {
     log.Fatal(err)
 }
-output, err := c.Call("add", `1`, `2`)
+output, err := c.Call("add", 1,2)
 if err != nil {
     log.Fatal(err)
 }
 fmt.Println(output)
 ```
-注意参数一定要用反引号包裹
+更多用法参见测试文件`execjs_test`
+> 注意：因为返回的是`interface{}`类型的变量，使用时要进行类型断言，例如
+```go
+output.(string) //这将输出值变为string类型
+output.([]interface{}) //这将输出值变为slice类型
+```
 ## Thanks to
 [PyExecJS](https://github.com/doloopwhile/PyExecJS)
