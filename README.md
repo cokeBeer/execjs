@@ -11,7 +11,7 @@
 ## Requirement
 需要本地path里面配置了node。
 
-## Intall
+## Install
 ```
 go get -u github.com/cokeBeer/execjs
 ```
