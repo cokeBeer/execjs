@@ -6,7 +6,7 @@
   - [Usage](#usage)
   - [Thanks to](#thanks-to)
 ## Introduction
-参考PyExecJS，提供了在go语言里执行js的能力。由于go是强类型语言，所以在迁移的时候使用`interface{}`作为替代传递任意类型的参数。
+参考PyExecJS，提供了在go语言里调用javascript的能力。由于go是强类型语言，所以在迁移的时候使用`interface{}`作为替代传递任意类型的参数。
 
 ## Requirement
 需要本地path里面配置了node。
